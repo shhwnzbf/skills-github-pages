@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚠️ 手机关机中...</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: red;
+            text-align: center;
+            font-size: 30px;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #countdown {
+            font-size: 60px;
+            margin-top: 50px;
+        }
+        .warning {
+            font-size: 40px;
+            margin-top: 20px;
+            animation: blink 1s infinite alternate;
+        }
+        @keyframes blink {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        button {
+            font-size: 24px;
+            padding: 15px 30px;
+            margin-top: 30px;
+            background: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #garbage {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            color: lime;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: none;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="warning">⚠️ 手机正在关机 ⚠️</h1>
+    <p>您的手机将在</p>
+    <p id="countdown">30</p>
+    <p>秒后自动关机！</p>
+    <button id="prankBtn" onclick="startPrank()">点此解除</button>
+
+    <div id="garbage"></div>
+
+    <script>
+        let timeLeft = 30;
+        let prankStarted = false;
+        let audioContext;
+
+        function startCountdown() {
+            const timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById("countdown").innerText = timeLeft;
+
+                if (timeLeft % 2 === 0) {
+                    playAlarm();
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    document.body.innerHTML = "<h1>💥 轰！💥</h1><p>你的手机电池已爆炸！</p>";
+                    navigator.vibrate([1000, 500, 1000]);
+                }
+            }, 1000);
+        }
+
+        function startPrank() {
+            if (prankStarted) return;
+            prankStarted = true;
+
+            // 更新界面
+            document.querySelector("#prankBtn").style.display = "none";
+            document.body.style.background = "red";
+            document.querySelector(".warning").innerText = "⚠️ 手机电池即将爆炸！请做好准备！";
+            document.querySelector("title").innerText = "⚠️ 手机电池过热！";
+            document.getElementById("garbage").style.display = "block";
+
+            // 启动乱码生成
+            setInterval(generateGarbage, 100);
+
+            // 初始化音频
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            playAlarm();
+
+            // 禁止返回和长按
+            document.body.oncontextmenu = function () { return false; };
+            document.body.onselectstart = function () { return false; };
+            document.body.ontouchstart = function () { return false; };
+
+            // 屏幕闪烁
+            setInterval(() => {
+                document.body.style.background = document.body.style.background === "red" ? "black" : "red";
+            }, 500);
+
+            // 开始新的倒计时
+            timeLeft = 20; // 变成 20 秒爆炸倒计时
+            startCountdown();
+        }
+
+        function playAlarm() {
+            if (!audioContext) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.type = "square"; 
+            oscillator.frequency.setValueAtTime(2000, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start();
+            setTimeout(() => oscillator.stop(), 500);
+        }
+
+        function generateGarbage() {
+            const garbageText = "A1B2C3D4E5F6G7H8I9J0@#￥%&*！";
+            let garbageElement = document.getElementById("garbage");
+            
+            let newText = "";
+            for (let i = 0; i < 50; i++) {
+                newText += garbageText[Math.floor(Math.random() * garbageText.length)];
+                if (i % 10 === 0) newText += " ";
+            }
+            newText += "\n⚠️ 手机电池即将爆炸！请做好准备！\n";
+            
+            garbageElement.innerHTML += newText;
+        }
+
+        // 开始初始倒计时
+        startCountdown();
+    </script>
+</body>
+</html>
+
